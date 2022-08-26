@@ -49,18 +49,14 @@ def logIn(driver, log_file):
             driver.find_element(By.NAME,
                                 "user[email]").send_keys(USER_EMAIL)
             time.sleep(random.random() * 1)
-            driver.implicitly_wait(5)
             driver.find_element(By.NAME,
                                 "user[password]").send_keys(PASSWARD)
             time.sleep(random.random() * 1)
-            driver.implicitly_wait(5)
             driver.find_element(
                 By.XPATH, "//label[@for='policy_confirmed']/div").click()
             time.sleep(random.random() * 1)
-            driver.implicitly_wait(5)
             driver.find_element(By.NAME, "commit").click()
 
-            driver.implicitly_wait(5)
             if driver.title == SUMMARY_PAGE:
                 break
         except ElementNotInteractableException:
@@ -68,14 +64,12 @@ def logIn(driver, log_file):
             log(log_file, str(driver.title))
             driver.get("https://ais.usvisa-info.com/en-ca/niv/users/sign_in")
 
-    driver.implicitly_wait(5)
     assert driver.title == SUMMARY_PAGE
 
 
 def home(driver, log_file):
 
     time.sleep(random.random() * 1)
-    driver.implicitly_wait(5)
 
     if driver.title != SUMMARY_PAGE:
         log(log_file, "ERROR: it's not no summary page")
@@ -83,14 +77,12 @@ def home(driver, log_file):
 
     driver.find_element(By.XPATH, "//a[@class='button primary small']").click()
 
-    driver.implicitly_wait(5)
     assert driver.title == HOME_PAGE
 
 
 def reschedule(driver, log_file):
 
     time.sleep(random.random() * 1)
-    driver.implicitly_wait(5)
 
     # click reschedule
     for i in range(60):
@@ -100,17 +92,13 @@ def reschedule(driver, log_file):
         driver.find_element(By.XPATH,
                             "//section[@id='forms']/ul/li[4]").click()
         time.sleep(random.random() * 1)
-        driver.implicitly_wait(5)
         driver.find_element(
             By.XPATH,
             "//section[@id='forms']/ul/li[4]/div/div/div[2]/p[2]/a").click()
 
-        driver.implicitly_wait(5)
-
         if driver.title == "429 Too Many Requests":
             driver.back()
             time.sleep(0.1)
-            driver.implicitly_wait(5)
         elif driver.title == SCHEDULE_PAGE:
             log(log_file, str(i))
             break
@@ -118,12 +106,11 @@ def reschedule(driver, log_file):
 
 
 def schedule(driver, max_i, log_file):
-
-    time.sleep(random.random() * 1)
-    driver.implicitly_wait(5)
-
+    # do not wait when element not found in this function to speed up
+    driver.implicitly_wait(0)
     if driver.title != SCHEDULE_PAGE:
         log(log_file, "ERROR: it's not on schedule page")
+        driver.implicitly_wait(3)
         return -1
 
     # find and click Date of Appointment, to show the calendar
@@ -132,6 +119,7 @@ def schedule(driver, max_i, log_file):
             By.ID, "appointments_consulate_appointment_date_input").click()
     except ElementNotInteractableException:
         close(driver)
+        driver.implicitly_wait(3)
         return -1
 
     # find if any date is available, if not click next month.
@@ -142,10 +130,10 @@ def schedule(driver, max_i, log_file):
 
         if driver.title != SCHEDULE_PAGE:
             log(log_file, "ERROR: it's not on schedule page")
+            driver.implicitly_wait(3)
             return -1
 
         try:
-            # driver.implicitly_wait(5)
             driver.find_element(By.XPATH, "//td[@class=' undefined']").click()
             break
         except NoSuchElementException:
@@ -153,14 +141,8 @@ def schedule(driver, max_i, log_file):
             i += 1
 
     if i < max_i and i > 0:  # found available date
-        # select the first available date
-        # time.sleep(random.random() * 1)
-        # driver.implicitly_wait(5)
-        # driver.find_element(By.XPATH, "//td[@class=' undefined']").click()
-
         # find and click Time of Appointment
         time.sleep(random.random() * 1)
-        driver.implicitly_wait(5)
         driver.find_element(
             By.XPATH,
             "//select[@name='appointments[consulate_appointment][time]']/option[2]"
@@ -171,14 +153,13 @@ def schedule(driver, max_i, log_file):
 
         submit(driver)
 
-        driver.implicitly_wait(5)
         driver.find_element(By.XPATH, "//a[@class='button alert']").click()
-
-        # close(driver)
-
+        
+        driver.implicitly_wait(3)
         return i
 
     close(driver)
+    driver.implicitly_wait(3)
     return -2
 
 
