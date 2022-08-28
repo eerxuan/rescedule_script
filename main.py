@@ -141,15 +141,27 @@ def schedule(driver, max_i, log_file):
             i += 1
 
     if i < max_i and i > 0:  # found available date
+        log(log_file, "Found desired date")
+
+        send_email(
+        EMAIL,
+        "Found desired date in month %d" % (i + datetime.now().month + 1))
+
         # find and click Time of Appointment
         time.sleep(random.random() * 1)
-        driver.find_element(
-            By.XPATH,
-            "//select[@name='appointments[consulate_appointment][time]']/option[2]"
-        ).click()
+        try:
+            driver.find_element(
+                By.XPATH,
+                "//select[@name='appointments[consulate_appointment][time]']/option[2]"
+            ).click()
+        except NoSuchElementException:
+            log(log_file, "No timeslot left.")
+            driver.implicitly_wait(3)
+            return -2
+
         send_email(
             EMAIL,
-            "Found desired date in month %d" % (i + datetime.now().month + 1))
+            "Found desired date and time in month %d" % (i + datetime.now().month + 1))
 
         submit(driver)
 
@@ -205,8 +217,7 @@ def main():
     log_file = "log_" + str(datetime.now()).replace(' ', '_').replace(
         '.', "_").replace(':', "-")
 
-    with open(log_file, 'w') as f:
-        f.write("Current before month: %d \n" % DESIRED_MONTH)
+    log(log_file, "Current before month: %d \n" % DESIRED_MONTH)
 
     max_i = DESIRED_MONTH - datetime.now().month - 1
     driver = openLink()
@@ -239,7 +250,7 @@ def main():
             scheduled_month = (scheduled_i + datetime.now().month + 1)
 
             send_email(
-                EMAIL, "[Appointment] FOUND NEW APPOINTMENT IN %d!!!!!!!!!!" %
+                EMAIL, "[Appointment] Scheduled NEW APPOINTMENT IN %d!!!!!!!!!!" %
                 scheduled_month)
             input("Scheduled month: %d. Continue?" % scheduled_month)
 
@@ -253,5 +264,5 @@ if __name__ == "__main__":
         raise
     except:
         send_email(EMAIL, "[Appointment] Stopped unexpected ")
-        input("Stopped unexpected1: %d. Continue?")
+        input("Stopped unexpected1. Continue?")
         raise
